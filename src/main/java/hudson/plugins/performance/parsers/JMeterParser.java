@@ -92,13 +92,44 @@ public class JMeterParser extends AbstractParser {
         final SAXParserFactory factory = SAXParserFactory.newInstance();
         factory.setValidating(false);
         factory.setNamespaceAware(false);
+        SAXParser saxParser = factory.newSAXParser();
+        XMLReader reader = saxParser.getXMLReader();
+
+        try {
+              // Xerces 1 - http://xerces.apache.org/xerces-j/features.html#external-general-entities
+              // Xerces 2 - http://xerces.apache.org/xerces2-j/features.html#external-general-entities
+
+              // Using the SAXParserFactory's setFeature
+              factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+              // Using the XMLReader's setFeature
+              reader.setFeature("http://xml.org/sax/features/external-general-entities", false);
+
+
+              // Xerces 2 only - http://xerces.apache.org/xerces-j/features.html#external-general-entities
+              factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+
+              // remaining parser logic
+              ...
+
+        } catch (ParserConfigurationException e) {
+          // Tried an unsupported feature.
+
+        } catch (SAXNotRecognizedException e) {
+          // Tried an unknown feature.
+
+        } catch (SAXNotSupportedException e) {
+          // Tried a feature known to the parser but unsupported.
+
+        } catch ... {
+
+        }
 
         final PerformanceReport report = createPerformanceReport();
         report.setExcludeResponseTime(excludeResponseTime);
         report.setShowTrendGraphs(showTrendGraphs);
         report.setReportFileName(reportFile.getName());
 
-        factory.newSAXParser().parse(reportFile, new DefaultHandler() {
+        saxParser.parse(reportFile, new DefaultHandler() {
             HttpSample currentSample;
             int counter = 0;
 
